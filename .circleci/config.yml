@@ -1,0 +1,58 @@
+---
+version: 2.1
+
+orbs:
+  move-ci: moverdc/move-ci@0.72.0
+
+vars: &common-ecr-build-and-push
+  context: aws
+  account-number: ${AWS_ACCOUNT_RDC_PROD}
+  repository-name: express-test-app
+  repository-tag-owner: test-express@move.com
+  repository-tag-component: test team
+  repository-tag-product: move
+  docker-context: "./app"
+  extra-build-args: --build-arg GIT_SHA=${CIRCLE_SHA1}
+  skip-when-tags-exist: false
+
+jobs:
+  lint-cci-config-file:
+    docker:
+      - image: cimg/python:3.10.7
+    steps:
+      - checkout
+      - run:
+          name: Install yamllint
+          command: pip install yamllint --quiet
+      - run:
+          name: Lint .circleci/config.yml file
+          command: yamllint .circleci/config.yml
+
+workflows:
+  pr:
+    jobs:
+      - lint-cci-config-file:
+          filters:
+            branches:
+              ignore: [master, development]
+      - move-ci/ecr-build-and-push:
+          <<: *common-ecr-build-and-push
+          tags: ${CIRCLE_SHA1}
+          requires: [lint-cci-config-file]
+          filters:
+            branches:
+              ignore: [master, development]
+  master:
+    jobs:
+      - lint-cci-config-file:
+          filters:
+            branches:
+              only: master
+      - move-ci/ecr-build-and-push:
+          <<: *common-ecr-build-and-push
+          name: ecr-build-and-push-prod
+          tags: latest,${CIRCLE_SHA1}
+          requires: [lint-cci-config-file]
+          filters:
+            branches:
+              only: master

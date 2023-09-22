@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: express-app-rollout
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: express-app
+  template:
+    metadata:
+      labels:
+        app: express-app
+    spec:
+      containers:
+      - name: express-app
+        image: myrepo/express-demo:latest # This should match the image you push in CircleCI
+        ports:
+        - containerPort: 8080
+  strategy:
+    blueGreen:
+      activeService: express-app-active
+      previewService: express-app-preview
+      autoPromotionEnabled: false

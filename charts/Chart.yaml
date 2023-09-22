@@ -1,0 +1,11 @@
+---
+apiVersion: v2
+name: jon-express-demo
+version: 0.1.0
+appVersion: 1.0.0
+description: Test deployment demo
+
+dependencies:
+  - name: skyway-library-chart
+    version: 0.0.27
+    repository: https://artifactory.moveaws.com/artifactory/Skyway-helm
